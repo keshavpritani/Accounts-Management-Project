@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Add Invoice Form - Kisbis Food Industry</title>
+    <%- include('../partials/css'); %>
+  </head>
+
+  <body>
+    <%- include('../partials/preloaded'); %>
+
+    <!--**********************************
+        Main wrapper start
+    ***********************************-->
+    <div id="main-wrapper">
+      <%- include('../partials/header'); %> <%- include('../partials/sidebar'); %>
+
+      <!--**********************************
+            Content body start
+        ***********************************-->
+      <div class="content-body">
+        <div class="container-fluid">
+          <!-- row -->
+          <div class="row">
+            <div class="col-xl-6 col-xxl-12">
+              <div class="card">
+                <div class="card-header">
+                  <h4 class="card-title"><% if (locals.invoice) { %> Edit <% } else { %> Add <% } %> Invoice</h4>
+                </div>
+                <div class="card-body">
+                  <div class="basic-form">
+                    <form method="POST" action="/invoice/add">
+                      <div class="form-row">
+                          <% if (locals.invoice) { %>
+                            <input type="hidden" class="form-control" name="_id" value="<%= invoice._id %>" />
+                            <input type="hidden" class="form-control" id="party_id" name="party_id" value="<%= invoice.party_id %>" />
+                            <div class="form-group col-md-6">
+                              <label>Party Name</label>
+                              <input
+                                type="text"
+                                class="form-control input-rounded"
+                                autofocus
+                                name="party_name"
+                                value="<%= invoice.party_name %>"
+                                disabled
+                              />
+                            </div>
+                            <div class="form-group col-md-6">
+                              <label>Invoice Date</label>
+                              <input
+                                type="text"
+                                class="form-control input-rounded"
+                                autofocus
+                                name="name"
+                                value="<%= invoice.order_date %>"
+                                disabled
+                              />
+                            </div>
+                          <% } else { %>
+                            <div class="form-group col-md-12">
+                              <label>Party Name</label>
+                            <!-- Selet a party name from the party list -->
+                            <select
+                              class="form-control input-rounded"
+                              name="party_id"
+                              required
+                              onchange="changeParty(this.value)"
+                            >
+                              <option disabled selected>Select a party</option>
+                              <% for (let j = 0; j < party.length; j++)  { %>
+                                <option value="<%= party[j]._id %>"><%= party[j].name %></option>
+                              <% } %>
+                            </select>
+                          </div>
+                          <% } %>
+                      </div>
+                      <div id="product-rows">
+                        <div class="form-row">
+                          <div class="form-group col-md-12">
+                            <b>Products</b>
+                          </div>
+                        </div>
+                        <table class="table" id="productTable">
+                          <thead>
+                            <tr>
+                              <th style="width:45%;">Product Name</th>
+                              <th style="width:10%;">Quantity</th>
+                              <th style="width:20%;">Price</th>
+                              <th style="width:20%;">Total</th>
+                              <th style="width:5%;"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% if (locals.products1) { %>
+                              <% for (var i = 0; i < locals.products1.length; i++) { 
+                                %>
+                              <tr id="row<%= i %>"> 
+                                <td>
+                                  <input type="hidden" name="products[]" value="<%= products1[i].product_id %>">
+                                  <input type="text" value="<%= products1[i].name %>" class="form-control input-rounded" readonly >
+                                </td>
+                                <td>
+                                  <input type="number" class="form-control input-rounded" id="qty<%= i %>" name="qtys[]" onchange="changePrice('<%= i %>')" value="<%= products1[i].qty%>" required />
+                                </td>
+                                <td>
+                                  <input type="number" class="form-control input-rounded" id="price<%= i %>" name="prices[]" step="0.01" onchange="changePrice('<%= i %>')" value="<%= products1[i].price%>" required />
+                                </td>
+                                <td>
+                                  <input type="number" disabled class="form-control input-rounded" id="total<%= i %>" step="0.01" value="<%= products1[i].total %>" required />
+                                </td>
+                                <td>
+                                  <button type="button" id="removeProductRowBtn" class="btn btn-danger btn-sm removeProductRowBtn" onclick="removeProductRow('<%= i %>')">
+                                    <i class="fa fa-trash-o"></i>
+                                  </button>
+                                </td>
+                              </tr>
+                            <% } } else { %>
+                            <tr id="row0"> 
+                              <td>
+                                <select name="products[]" class="form-control input-rounded" id="product0" onchange="getPriceOfProduct(this.value, 0)" required>
+                                  <option disabled selected>Select Product</option>
+                                      <% for(var i=0; i < products.length;i++) { %>
+                                    <option value="<%= products[i]._id %>">
+                                      <%= products[i].name %>
+                                    </option>
+                                  <% } %>
+                                </select>
+                              </td>
+                              <td>
+                                <input type="number" class="form-control input-rounded" id="qty0" name="qtys[]" onchange="changePrice(0)" min="1" value="1" required />
+                              </td>
+                              <td>
+                                <input type="number" class="form-control input-rounded" id="price0" name="prices[]" onchange="changePrice(0)" step="0.01" required />
+                              </td>
+                              <td>
+                                <input type="number" disabled class="form-control input-rounded" id="total0" step="0.01" required />
+                              </td>
+                              <td>
+                                <button type="button" id="removeProductRowBtn" class="btn btn-danger btn-sm removeProductRowBtn" onclick="removeProductRow(0)">
+                                  <i class="fa fa-trash-o"></i>
+                                </button>
+                              </td>
+                            </tr>
+                            <% } %>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- Add Row Button -->
+                      <button type="button" id="addProductRowBtn" class="btn btn-success btn-sm" onclick="addProductRow()">
+                        <i class="fa fa-plus"> Add Row</i>
+                      </button>
+                      <input  type="submit" class="btn btn-primary">
+                    </form>
+                  </div>
+                </div>
+              </div>
+          </div>
+        </div>
+      </div>
+      <!--**********************************
+            Content body end
+        ***********************************-->
+      <%- include('../partials/footer'); %>
+    </div>
+    <!--**********************************
+        Main wrapper end
+    ***********************************-->
+
+    <%- include('../partials/scripts'); %>
+    <script>
+      var party_id = $("#party_id").val();
+      function addProductRow() {
+        let tableLength = $("#productTable tbody tr").length;
+        let count=0;
+        if(tableLength > 0) {
+          const tableRow = $("#productTable tbody tr:last").attr('id');
+          count = tableRow.substring(3);
+          count = Number(count) + 1;
+        }
+        let tr = `<tr id="row${count}">`;
+        tr+=`<td><select name="products[]" class="form-control input-rounded" id="product${count}" onchange="getPriceOfProduct(this.value, ${count})" required><option value="">Select Product</option><% for(var i=0; i < products.length;i++) { %><option value="<%= products[i]._id %>"><%= products[i].name %></option><% } %>  </select></td>`;
+        tr+=`<td><input type="number" class="form-control input-rounded" id="qty${count}" name="qtys[]" onchange="changePrice(${count})" min="1" value="1" /></td>`;
+        tr+=`<td><input type="number" class="form-control input-rounded" id="price${count}" name="prices[]" step="0.01" onchange="changePrice(${count})" required /></td>`;
+        tr+=`<td><input type="number" disabled class="form-control input-rounded" id="total${count}" step="0.01" /></td>`;
+        tr+=`<td><button type="button" id="removeProductRowBtn" class="btn btn-danger btn-sm removeProductRowBtn" onclick="removeProductRow(${count})"> <i class="fa fa-trash-o"></i></button></td>`;
+        tr+=`</tr>`;
+        $("#productTable tbody").append(tr);
+      }
+
+      function removeProductRow(row) {
+        if($("#productTable tbody tr").length === 1) {
+          alert("There should be atleast one Product for a invoice");
+          return;
+        }
+        $("#row"+row).remove();
+      }
+
+      function getPriceOfProduct(productId, row) {
+        // alert(productId);
+        // alert(party_id)
+        // get price of product by calling api through ajax
+        $.ajax({
+          url: '/invoice/getPriceOfProduct',
+          type: 'GET',
+          data: {
+            product_id: productId,
+            party_id: party_id
+          },
+          success: function(data) {
+            // alert(data);
+            // console.log(data);
+            $("#price"+row).val(data.price);
+            changePrice(row);
+          }
+        });
+      }
+
+      function changeParty(partyId) {
+        // alert(partyId);
+        party_id = partyId;
+        let tableLength = $("#productTable tbody tr").length;
+        let count=0;
+        if(tableLength > 0) {		
+          const tableRow = $("#productTable tbody tr:last").attr('id');
+          count = tableRow.substring(3);
+          count = Number(count) + 1;
+        }
+        else return;
+        for(var i=0; i < count; i++) {
+          // console.log($("#product"+i).val());
+          const productId = $("#product"+i).val();
+          if(productId!==undefined && productId!=="") {
+            getPriceOfProduct(productId, i);
+          }
+          // alert(productId);
+        }
+      }
+
+      function changePrice(row) {
+        // alert(qty);
+        // alert(row);
+        let qty = $("#qty"+row).val();
+        let price = $("#price"+row).val();
+        let totalPrice = (Number(price) * Number(qty)).toFixed(2);
+        $("#total"+row).val(totalPrice);
+      }
+    </script>
+  </body>
+</html>

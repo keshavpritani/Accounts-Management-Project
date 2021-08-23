@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Invoices - Kisbis Food Industry</title>
+		<%- include('../partials/css'); %>
+	</head>
+
+	<body>
+		<%- include('../partials/preloaded'); %>
+
+		<!--**********************************
+        Main wrapper start
+    ***********************************-->
+		<div id="main-wrapper">
+			<%- include('../partials/header'); %> <%-
+			include('../partials/sidebar'); %>
+
+			<!--**********************************
+            Content body start
+        ***********************************-->
+			<div class="content-body">
+				<div class="container-fluid">
+					<div class="row page-titles mx-0">
+						<div class="col-sm-6 p-md-0">
+							<div class="welcome-text">
+								<h4>Invoices</h4>
+							</div>
+						</div>
+					</div>
+					<!-- row -->
+
+					<div class="row">
+						<div class="col-12">
+							<div class="card">
+								<div class="card-body">
+									<div class="table-responsive">
+										<table
+											border="0"
+											cellspacing="5"
+											cellpadding="5"
+											width="100%"
+											style="text-align: center"
+										>
+											<tbody>
+												<tr>
+													<td>
+														Start date:
+														<input
+															type="date"
+															id="min"
+															name="min"
+														/>
+													</td>
+													<td>
+														End date:
+														<input
+															type="date"
+															id="max"
+															name="max"
+														/>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+										<br />
+										<br />
+										<table
+											id="example"
+											class="display"
+											style="width: 100%"
+										>
+											<thead>
+												<tr>
+													<th>#</th>
+													<th>Party Name</th>
+													<th>Invoice Date</th>
+													<th>Action</th>
+												</tr>
+											</thead>
+											<tbody>
+												<% for(var i=0; i <
+												invoice.length;i++) { %>
+												<tr>
+													<td><%= i + 1 %></td>
+													<td>
+														<%=
+														invoice[i].party_name %>
+													</td>
+													<td>
+														<%=
+														invoice[i].order_date %>
+													</td>
+													<td>
+														<span>
+															<a
+																href="/invoice/edit/<%= invoice[i]._id %>"
+																class="mr-4"
+																data-toggle="tooltip"
+																data-placement="top"
+																title="Edit"
+																><i
+																	class="
+																		fa
+																		fa-pencil
+																		color-muted
+																	"
+																></i>
+															</a>
+															<a
+																href="/invoice/delete/<%= invoice[i]._id %>"
+																data-toggle="tooltip"
+																data-placement="top"
+																title="Make Inactive"
+																><i
+																	class="
+																		fa
+																		fa-close
+																		color-danger
+																	"
+																></i
+															></a>
+															&nbsp;&nbsp;&nbsp;&nbsp;
+															<!-- button for confirm to send update to party -->
+															<%
+															if(invoice[i].phone_number
+															&&
+															invoice[i].phone_number.length
+															>= 10) { %>
+															<a
+																href="/invoice/confirm/<%= invoice[i]._id %>"
+															>
+																<button
+																	type="button"
+																	class="
+																		btn
+																		btn-success
+																		btn-sm
+																	"
+																>
+																	<i
+																		class="
+																			fa
+																			fa-check
+																		"
+																	></i>
+																	Send Bill
+																</button>
+															</a>
+															<% } %>
+														</span>
+													</td>
+												</tr>
+												<% } %>
+											</tbody>
+											<tfoot>
+												<tr>
+													<th>#</th>
+													<th>Party Name</th>
+													<th>Invoice Date</th>
+													<th>Action</th>
+												</tr>
+											</tfoot>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--**********************************
+              Content body end
+          ***********************************-->
+			<%- include('../partials/footer'); %>
+		</div>
+		<!--**********************************
+          Main wrapper end
+      ***********************************-->
+		<script
+			src="https://code.jquery.com/jquery-3.5.1.js"
+			type="text/javascript"
+		></script>
+		<script
+			src="https://cdn.datatables.net/datetime/1.1.0/js/dataTables.dateTime.min.js"
+			type="text/javascript"
+		></script>
+		<%- include('../partials/scripts'); %>
+		<script>
+			var minDate, maxDate;
+
+			$().ready(function () {
+				// Create date inputs
+				minDate = $("#min");
+				maxDate = $("#max");
+				var today = new Date();
+				var dd = today.getDate();
+				var mm = today.getMonth() + 1; //January is 0 so need to add 1 to make it 1!
+				var yyyy = today.getFullYear();
+				if (dd < 10) {
+					dd = "0" + dd;
+				}
+				if (mm < 10) {
+					mm = "0" + mm;
+				}
+				today = yyyy + "-" + mm + "-";
+
+				minDate.val(today + "01");
+				minDate.attr({ min: today + "01" });
+				minDate.attr({ max: today + dd });
+
+				maxDate.val(today + dd);
+				maxDate.attr({ min: today + "01" });
+				maxDate.attr({ max: today + dd });
+				// DataTables initialisation
+				var table = $("#example").DataTable();
+
+				// Refilter the table
+				$("#min, #max").on("change", function () {
+					table.draw();
+				});
+			});
+			// Custom filtering function which will search data in column four between two values
+			$.fn.dataTable.ext.search.push(function (
+				settings,
+				data,
+				dataIndex
+			) {
+				var min = new Date(minDate.val());
+				var max = new Date(maxDate.val());
+				var date = new Date(data[2]);
+
+				// console.log(min, max, date);
+
+				if (
+					(min === null && max === null) ||
+					(min === null && date <= max) ||
+					(min <= date && max === null) ||
+					(min <= date && date <= max)
+				) {
+					return true;
+				}
+				return false;
+			});
+			// $("#example").DataTable();
+		</script>
+		<% if(locals.result) { %>
+		<script>
+			swal("<%= result.message %>", "", "<%= result.status %>");
+		</script>
+		<% } %>
+	</body>
+</html>

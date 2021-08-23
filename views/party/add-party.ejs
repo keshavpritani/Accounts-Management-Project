@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Add Party Form - Kisbis Food Industry</title>
+    <%- include('../partials/css'); %>
+  </head>
+
+  <body>
+    <%- include('../partials/preloaded'); %>
+
+    <!--**********************************
+        Main wrapper start
+    ***********************************-->
+    <div id="main-wrapper">
+      <%- include('../partials/header'); %> <%- include('../partials/sidebar'); %>
+
+      <!--**********************************
+            Content body start
+        ***********************************-->
+      <div class="content-body">
+        <div class="container-fluid">
+          <!-- row -->
+          <div class="row">
+            <div class="col-xl-6 col-xxl-12">
+              <div class="card">
+                <div class="card-header">
+                  <h4 class="card-title"><% if (locals.party) { %> Edit <% } else { %> Add <% } %> Party</h4>
+                </div>
+                <div class="card-body">
+                  <div class="basic-form">
+                    <form method="POST" action="/party/add">
+                      <div class="form-row">
+                        <% if (locals.party) { %>
+                        <input type="hidden" class="form-control" name="_id" value="<%= party._id %>" />
+                        <% } %>
+                        <div class="form-group col-md-6">
+                          <label>Party Name</label>
+                            <input
+                              type="text"
+                              class="form-control input-rounded"
+                              autofocus
+                              name="name"
+                              required
+                              <% if (locals.party) { %>
+                              value="<%= party.name %>"
+                              <% } %>
+                            />
+                        </div>
+                        <div class="form-group col-md-6">
+                          <label>Party Phone Number</label>
+                            <input
+                              type="text"
+                              class="form-control input-rounded"
+                              autofocus
+                              maxlength="10"
+                              name="phone_number"
+                              required
+                              <% if (locals.party) { %>
+                              value="<%= party.phone_number %>"
+                              <% } %>
+                            />
+                        </div>
+                      </div>
+                      <div id="product-rows">
+                        <div class="form-row">
+                          <div class="form-group col-md-12">
+                            <b>Products</b>
+                          </div>
+                        </div>
+                        <table class="table" id="productTable">
+                          <thead>
+                            <tr>
+                              <th style="width:50%;">Product Name</th>
+                              <th style="width:45%;">Price</th>
+                              <th style="width:5%;"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% if (locals.party) { %>
+                              <% for (var j = 0; j < locals.party.products.length; j++) { %>
+                              <tr id="row<%= j %>"> 
+                                <td>
+                                  <% for(var i=0; i < products.length;i++) { 
+                                    if(party.products[j].product_id === products[i]._id) { %>
+                                      <input type="hidden" name="products[]" value="<%= products[i]._id %>">
+                                      <input type="text" value="<%= products[i].name %>" class="form-control input-rounded" readonly >
+                                    <% } %>
+                                  <% } %> 
+                                </td>
+                                <td>
+                                  <input type="number" class="form-control input-rounded" name="prices[]" step="0.01" value="<%= party.products[j].price%>" />
+                                </td>
+                                <td>
+                                  <button type="button" id="removeProductRowBtn" class="btn btn-danger btn-sm removeProductRowBtn" onclick="removeProductRow('<%= j %>')">
+                                    <i class="fa fa-trash-o"></i>
+                                  </button>
+                                </td>
+                              </tr>
+                            <% } } else { %>
+                            <tr id="row0"> 
+                              <td>
+                                <select name="products[]" class="form-control input-rounded"  required>
+                                  <option value="">Select Product</option>
+                                      <% for(var i=0; i < products.length;i++) { %>
+                                    <option value="<%= products[i]._id %>">
+                                      <%= products[i].name %>
+                                    </option>
+                                  <% } %>
+                                </select>
+                              </td>
+                              <td>
+                                <input type="number" class="form-control input-rounded" name="prices[]" step="0.01" />
+                              </td>
+                              <td>
+                                <button type="button" id="removeProductRowBtn" class="btn btn-danger btn-sm removeProductRowBtn" onclick="removeProductRow(0)">
+                                  <i class="fa fa-trash-o"></i>
+                                </button>
+                              </td>
+                            </tr>
+                            <% } %>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- Add Row Button -->
+                      <button type="button" id="addProductRowBtn" class="btn btn-success btn-sm" onclick="addProductRow()">
+                        <i class="fa fa-plus"> Add Row</i>
+                      </button>
+                      <input  type="submit" class="btn btn-primary">
+                    </form>
+                  </div>
+                </div>
+              </div>
+          </div>
+        </div>
+      </div>
+      <!--**********************************
+            Content body end
+        ***********************************-->
+      <%- include('../partials/footer'); %>
+    </div>
+    <!--**********************************
+        Main wrapper end
+    ***********************************-->
+
+    <%- include('../partials/scripts'); %>
+    <script>
+        function addProductRow() {
+          let tableLength = $("#productTable tbody tr").length;
+          let count=0;
+          if(tableLength > 0) {		
+            const tableRow = $("#productTable tbody tr:last").attr('id');
+            count = tableRow.substring(3);
+            count = Number(count) + 1;
+          }
+          let tr = `<tr id="row${count}">`;
+          tr+=`<td><select name="products[]" class="form-control input-rounded" required><option value="">Select Product</option><% for(var i=0; i < products.length;i++) { %><option value="<%= products[i]._id %>"><%= products[i].name %></option><% } %>  </select></td>`;
+          tr+=`<td><input type="number" class="form-control input-rounded" name="prices[]" step="0.01" required /></td>`;
+          tr+=`<td><button type="button" id="removeProductRowBtn" class="btn btn-danger btn-sm removeProductRowBtn" onclick="removeProductRow(${count})"> <i class="fa fa-trash-o"></i></button></td>`;
+          tr+=`</tr>`;
+          $("#productTable tbody").append(tr);
+        }
+
+        function removeProductRow(row) {
+          if($("#productTable tbody tr").length === 1) {
+            alert("There should be atleast one Product for a Party");
+            return;
+          }
+          $("#row"+row).remove();
+        }
+    </script>
+  </body>
+</html>

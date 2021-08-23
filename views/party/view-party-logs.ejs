@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Party Payments Logs - Kisbis Food Industry</title>
+		<%- include('../partials/css'); %>
+	</head>
+
+	<body>
+		<%- include('../partials/preloaded'); %>
+
+		<!--**********************************
+        Main wrapper start
+    ***********************************-->
+		<div id="main-wrapper">
+			<%- include('../partials/header'); %> <%-
+			include('../partials/sidebar'); %>
+
+			<!--**********************************
+            Content body start
+        ***********************************-->
+			<div class="content-body">
+				<div class="container-fluid">
+					<div class="row page-titles mx-0">
+						<div class="col-sm-6 p-md-0">
+							<div class="welcome-text">
+								<h4>Party Payments</h4>
+							</div>
+						</div>
+					</div>
+					<!-- row -->
+
+					<div class="row">
+						<div class="col-12">
+							<div class="card">
+								<div class="card-body">
+									<div class="table-responsive">
+										<table
+											id="example"
+											class="display"
+											style="width: 100%"
+										>
+											<thead>
+												<tr>
+													<th>#</th>
+													<th>Party Name</th>
+													<th>Amount</th>
+													<th>Date</th>
+													<!-- <th>Action</th> -->
+												</tr>
+											</thead>
+											<tbody>
+												<% for(var i=0; i <
+												logs.length;i++) { %>
+												<tr>
+													<td><%= i + 1 %></td>
+													<td>
+														<%= logs[i].party_name
+														%>
+													</td>
+													<td>
+														<%= logs[i].amount%>
+													</td>
+													<td><%= logs[i].date%></td>
+													<!-- <td>
+														<span>
+															<a
+																href="/party/logs/delete/<%= logs[i]._id %>"
+																data-toggle="tooltip"
+																data-placement="top"
+																title="Make Inactive"
+																><i
+																	class="
+																		fa
+																		fa-close
+																		color-danger
+																	"
+																></i
+															></a>
+														</span>
+													</td> -->
+												</tr>
+												<% } %>
+											</tbody>
+											<tfoot>
+												<tr>
+													<th>#</th>
+													<th>Party Name</th>
+													<th>Party Phone Number</th>
+													<th>Balance Due</th>
+													<th>Action</th>
+												</tr>
+											</tfoot>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--**********************************
+              Content body end
+          ***********************************-->
+			<%- include('../partials/footer'); %>
+		</div>
+		<!--**********************************
+          Main wrapper end
+      ***********************************-->
+
+		<%- include('../partials/scripts'); %>
+		<script>
+			$("#example").DataTable();
+		</script>
+		<% if(locals.result) { %>
+		<script>
+			swal("<%= result.message %>", "", "<%= result.status %>");
+		</script>
+		<% } %>
+	</body>
+</html>

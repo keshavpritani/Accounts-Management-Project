@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Product - Kisbis Food Industry</title>
+		<%- include('../partials/css'); %>
+	</head>
+
+	<body>
+		<%- include('../partials/preloaded'); %>
+
+		<!--**********************************
+        Main wrapper start
+    ***********************************-->
+		<div id="main-wrapper">
+			<%- include('../partials/header'); %> <%-
+			include('../partials/sidebar'); %>
+
+			<!--**********************************
+            Content body start
+        ***********************************-->
+			<div class="content-body">
+				<div class="container-fluid">
+					<div class="row page-titles mx-0">
+						<div class="col-sm-6 p-md-0">
+							<div class="welcome-text">
+								<h4>Products</h4>
+							</div>
+						</div>
+					</div>
+					<!-- row -->
+
+					<div class="row">
+						<div class="col-12">
+							<div class="card">
+								<div class="card-body">
+									<div class="table-responsive">
+										<table
+											id="example"
+											class="display"
+											style="width: 100%"
+										>
+											<thead>
+												<tr>
+													<th>#</th>
+													<th>Product Name</th>
+													<!-- <th>Quantity</th> -->
+													<th>Price</th>
+													<th>Status</th>
+													<th>Action</th>
+												</tr>
+											</thead>
+											<tbody>
+												<% for(var i=0; i <
+												products.length;i++) { %>
+												<tr>
+													<td><%= i + 1 %></td>
+													<td>
+														<%= products[i].name %>
+													</td>
+													<!-- <td>
+														<%= products[i].quantity
+														%>
+													</td> -->
+													<td>
+														<%= products[i].price %>
+													</td>
+													<td>
+														<%
+														if(products[i].status=="true"){
+														%>
+														<span
+															class="
+																badge
+																badge-success
+															"
+															>Active</span
+														>
+														<% } else { %>
+														<span
+															class="
+																badge
+																badge-danger
+															"
+															>Inactive</span
+														>
+														<% } %>
+													</td>
+													<td>
+														<span>
+															<a
+																href="/products/edit/<%= products[i]._id %>"
+																class="mr-4"
+																data-toggle="tooltip"
+																data-placement="top"
+																title="Edit"
+																><i
+																	class="
+																		fa
+																		fa-pencil
+																		color-muted
+																	"
+																></i>
+															</a>
+															<%
+															if(products[i].status=="true"){
+															%>
+															<a
+																href="/products/delete/<%= products[i]._id %>"
+																data-toggle="tooltip"
+																data-placement="top"
+																title="Make Inactive"
+																><i
+																	class="
+																		fa
+																		fa-close
+																		color-danger
+																	"
+																></i
+															></a>
+															<% } else { %>
+															<a
+																href="/products/active/<%= products[i]._id %>"
+																data-toggle="tooltip"
+																data-placement="top"
+																title="Make Active"
+																><i
+																	class="
+																		fa
+																		fa-check
+																		color-success
+																	"
+																></i
+															></a>
+															<% } %>
+														</span>
+													</td>
+												</tr>
+												<% } %>
+											</tbody>
+											<tfoot>
+												<tr>
+													<th>#</th>
+													<th>Product Name</th>
+													<!-- <th>Quantity</th> -->
+													<th>Price</th>
+													<th>Status</th>
+													<th>Action</th>
+												</tr>
+											</tfoot>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--**********************************
+              Content body end
+          ***********************************-->
+			<%- include('../partials/footer'); %>
+		</div>
+		<!--**********************************
+          Main wrapper end
+      ***********************************-->
+
+		<%- include('../partials/scripts'); %>
+		<script>
+			$("#example").DataTable();
+		</script>
+		<% if(locals.result) { %>
+		<script>
+			swal("<%= result.message %>", "", "<%= result.status %>");
+		</script>
+		<% } %>
+	</body>
+</html>

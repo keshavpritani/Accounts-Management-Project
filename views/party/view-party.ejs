@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Party - Kisbis Food Industry</title>
+		<%- include('../partials/css'); %>
+	</head>
+
+	<body>
+		<%- include('../partials/preloaded'); %>
+
+		<!--**********************************
+        Main wrapper start
+    ***********************************-->
+		<div id="main-wrapper">
+			<%- include('../partials/header'); %> <%-
+			include('../partials/sidebar'); %>
+
+			<!--**********************************
+            Content body start
+        ***********************************-->
+			<div class="content-body">
+				<div class="container-fluid">
+					<div class="row page-titles mx-0">
+						<div class="col-sm-6 p-md-0">
+							<div class="welcome-text">
+								<h4>Party</h4>
+							</div>
+						</div>
+					</div>
+					<!-- row -->
+
+					<div class="row">
+						<div class="col-12">
+							<div class="card">
+								<div class="card-body">
+									<div class="table-responsive">
+										<table
+											id="example"
+											class="display"
+											style="width: 100%"
+										>
+											<thead>
+												<tr>
+													<th>#</th>
+													<th>Party Name</th>
+													<th>Party Phone Number</th>
+													<th>Balance Due</th>
+													<th>Action</th>
+												</tr>
+											</thead>
+											<tbody>
+												<% for(var i=0; i <
+												party.length;i++) { %>
+												<tr>
+													<td><%= i + 1 %></td>
+													<td>
+														<%= party[i].name %>
+													</td>
+													<td>
+														<%=
+														party[i].phone_number %>
+													</td>
+													<td><%= party[i].due %></td>
+													<td>
+														<span>
+															<a
+																href="/party/edit/<%= party[i]._id %>"
+																class="mr-4"
+																data-toggle="tooltip"
+																data-placement="top"
+																title="Edit"
+																><i
+																	class="
+																		fa
+																		fa-pencil
+																		color-muted
+																	"
+																></i>
+															</a>
+															<a
+																href="/party/delete/<%= party[i]._id %>"
+																data-toggle="tooltip"
+																data-placement="top"
+																title="Make Inactive"
+																><i
+																	class="
+																		fa
+																		fa-close
+																		color-danger
+																	"
+																></i
+															></a>
+															&nbsp;&nbsp;&nbsp;&nbsp;
+															<!-- Button trigger modal -->
+															<button
+																type="button"
+																class="
+																	btn
+																	btn-primary
+																"
+																data-toggle="modal"
+																data-target="#exampleModal<%= party[i]._id %>"
+															>
+																Add Payments
+															</button>
+
+															<!-- Modal -->
+															<div
+																class="
+																	modal
+																	fade
+																"
+																id="exampleModal<%= party[i]._id %>"
+																tabindex="-1"
+																role="dialog"
+																aria-labelledby="exampleModalLabel"
+																aria-hidden="true"
+															>
+																<div
+																	class="
+																		modal-dialog
+																	"
+																	role="document"
+																>
+																	<div
+																		class="
+																			modal-content
+																		"
+																	>
+																		<div
+																			class="
+																				modal-header
+																			"
+																		>
+																			<h5
+																				class="
+																					modal-title
+																				"
+																				id="exampleModalLabel"
+																			>
+																				Add
+																				Payments
+																			</h5>
+																			<button
+																				type="button"
+																				class="
+																					close
+																				"
+																				data-dismiss="modal"
+																				aria-label="Close"
+																			>
+																				<span
+																					aria-hidden="true"
+																					>&times;</span
+																				>
+																			</button>
+																		</div>
+																		<form
+																			action="/party/payment/<%= party[i]._id %>"
+																			method="POST"
+																		>
+																			<div
+																				class="
+																					modal-body
+																				"
+																			>
+																				<input
+																					type="hidden"
+																					name="party_id"
+																					value="<%= party[i]._id %>"
+																				/>
+
+																				<div
+																					class="
+																						form-group
+																					"
+																				>
+																					<label>
+																						Amount
+																					</label>
+
+																					<input
+																						type="number"
+																						class="
+																							form-control
+																						"
+																						placeholder="Enter Amount"
+																						name="amount"
+																						required
+																					/>
+																				</div>
+																			</div>
+																			<div
+																				class="
+																					modal-footer
+																				"
+																			>
+																				<button
+																					type="button"
+																					class="
+																						btn
+																						btn-secondary
+																					"
+																					data-dismiss="modal"
+																				>
+																					Close
+																				</button>
+																				<button
+																					type="submit"
+																					class="
+																						btn
+																						btn-primary
+																					"
+																				>
+																					Save
+																					changes
+																				</button>
+																			</div>
+																		</form>
+																	</div>
+																</div>
+															</div>
+															<!-- </a> -->
+														</span>
+													</td>
+												</tr>
+												<% } %>
+											</tbody>
+											<tfoot>
+												<tr>
+													<th>#</th>
+													<th>Party Name</th>
+													<th>Party Phone Number</th>
+													<th>Balance Due</th>
+													<th>Action</th>
+												</tr>
+											</tfoot>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--**********************************
+              Content body end
+          ***********************************-->
+			<%- include('../partials/footer'); %>
+		</div>
+		<!--**********************************
+          Main wrapper end
+      ***********************************-->
+
+		<%- include('../partials/scripts'); %>
+		<script>
+			$("#example").DataTable();
+		</script>
+		<% if(locals.result) { %>
+		<script>
+			swal("<%= result.message %>", "", "<%= result.status %>");
+		</script>
+		<% } %>
+	</body>
+</html>
