@@ -28,7 +28,7 @@ client.on("qr", (qr) => {
 });
 
 client.on("authenticated", (session) => {
-	console.log("AUTH!");
+	console.log("WhatsApp AUTH Completed!");
 	sessionCfg = session;
 
 	fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), function (err) {
@@ -44,13 +44,13 @@ client.on("authenticated", (session) => {
 });
 
 client.on("auth_failure", () => {
-	console.log("AUTH Failed !");
+	console.log("WhatsApp AUTH Failed !");
 	fs.unlinkSync("./session.json");
 	sessionCfg = "";
 });
 
 client.on("ready", () => {
-	console.log("Client is ready!");
+	console.log("WhatsApp Client is ready!");
 });
 
 client.initialize();

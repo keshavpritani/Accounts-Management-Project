@@ -3,8 +3,9 @@ const PDFDocument = require("pdfkit");
 
 function createInvoice(invoice, path) {
 	let doc = new PDFDocument({ size: "A4", margin: 50 });
-	// doc.info["Title"] = "Test Document";
-	generateHeader(doc);
+	doc.info["Title"] =
+		invoice.company_name + " - Invoice - " + invoice.order_date;
+	generateHeader(doc, invoice.company_name);
 	generateCustomerInformation(doc, invoice);
 	generateInvoiceTable(doc, invoice);
 	generateFooter(doc);
@@ -12,13 +13,13 @@ function createInvoice(invoice, path) {
 	doc.pipe(fs.createWriteStream(path));
 }
 
-function generateHeader(doc) {
+function generateHeader(doc, company_name) {
 	doc.image("./assets/images/logo.png", 50, 45, { width: 50 })
 		.fillColor("#444444")
 		.fontSize(20)
-		.text("Kisbis Food Industries", 110, 57)
+		.text(company_name, 110, 57)
 		.fontSize(10)
-		.text("Kisbis Food Industries", 200, 50, { align: "right" })
+		.text(company_name, 200, 50, { align: "right" })
 		.text("123 Main Street", 200, 65, { align: "right" })
 		.text("New York, NY, 10025", 200, 80, { align: "right" })
 		.moveDown();
@@ -29,34 +30,36 @@ function generateCustomerInformation(doc, invoice) {
 
 	generateHr(doc, 185);
 
-	const customerInformationTop = 200;
+	let customerInformationTop = (customerInformationTop1 = 200);
 
-	doc.fontSize(10)
-		.text("Invoice Number:", 50, customerInformationTop)
-		.font("Helvetica-Bold")
-		.text(invoice.invoice_nr, 150, customerInformationTop)
-		.font("Helvetica")
-		.text("Invoice Date:", 50, customerInformationTop + 15)
+	doc.fontSize(10);
+	if (invoice.invoice_nr) {
+		doc.text("Invoice Number:", 50, customerInformationTop)
+			.font("Helvetica-Bold")
+			.text(invoice.invoice_nr, 150, customerInformationTop)
+			.font("Helvetica");
+	} else customerInformationTop -= 15;
+	doc.text("Invoice Date:", 50, customerInformationTop + 15)
 		.text(invoice.order_date, 150, customerInformationTop + 15)
 		.text("Balance Due:", 50, customerInformationTop + 30)
 		.text(formatCurrency(invoice.due), 150, customerInformationTop + 30)
 
 		.font("Helvetica-Bold")
-		.text(invoice.party_details.party_name, 300, customerInformationTop)
+		.text(invoice.party_details.party_name, 300, customerInformationTop1)
 		.font("Helvetica")
 		.text(
 			invoice.party_details.phone_number,
 			300,
-			customerInformationTop + 15
+			customerInformationTop1 + 15
 		)
 		.moveDown();
 
-	generateHr(doc, 252);
+	generateHr(doc, customerInformationTop + 52);
 }
 
 function generateInvoiceTable(doc, invoice) {
 	let i;
-	const invoiceTableTop = 330;
+	let invoiceTableTop = 300;
 
 	doc.font("Helvetica-Bold");
 	generateTableRow(
@@ -67,25 +70,31 @@ function generateInvoiceTable(doc, invoice) {
 		"Quantity",
 		"Line Total"
 	);
-	generateHr(doc, invoiceTableTop + 20);
+	invoiceTableTop += 20;
+	generateHr(doc, invoiceTableTop);
 	doc.font("Helvetica");
 
 	for (i = 0; i < invoice.items.length; i++) {
 		const item = invoice.items[i];
-		const position = invoiceTableTop + (i + 1) * 30;
+		invoiceTableTop += 20;
 		generateTableRow(
 			doc,
-			position,
+			invoiceTableTop,
 			item.name,
 			formatCurrency(item.price),
 			item.qty,
 			formatCurrency(item.total)
 		);
+		invoiceTableTop += 20;
 
-		generateHr(doc, position + 20);
+		generateHr(doc, invoiceTableTop);
+		if (invoiceTableTop > 750) {
+			doc.addPage();
+			invoiceTableTop = 40;
+		}
 	}
 
-	const subtotalPosition = invoiceTableTop + (i + 1) * 30;
+	const subtotalPosition = invoiceTableTop + 30;
 	doc.font("Helvetica-Bold");
 	generateTableRow(
 		doc,

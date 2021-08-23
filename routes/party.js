@@ -3,7 +3,7 @@ const CONFIG = require("../config");
 var router = express.Router();
 const partyDB = CONFIG.DB.party;
 const productDB = CONFIG.DB.products;
-const partyLogDB = CONFIG.DB.party_logs;
+let partyLogDB = CONFIG.DB.party_logs;
 
 // Database Schema
 
@@ -50,7 +50,7 @@ router.get("/", async function (req, res) {
 });
 
 router.get("/add", async function (req, res) {
-	const docs = await productDB.find({ status: "true" });
+	const docs = await productDB.find({ status: "true" }).sort({ name: 1 });
 	if (!docs) {
 		req.session.error = "Error getting Party Details";
 		return res.redirect("./");
@@ -109,7 +109,7 @@ router.get("/edit/:id", async function (req, res) {
 		req.session.error = "Error getting Party Details";
 		return res.redirect("../");
 	}
-	const products = await productDB.find({ status: "true" });
+	const products = await productDB.find({ status: "true" }).sort({ name: 1 });
 	if (!products) {
 		req.session.error = "Error getting Product Details";
 		return res.redirect("../");
@@ -174,6 +174,20 @@ router.post("/payment/:id", async function (req, res) {
 });
 
 router.get("/logs", async function (req, res) {
+	const current_date = new Date();
+	const current_month = current_date.toLocaleString("en-US", {
+		month: "short",
+	});
+	const current_year = current_date.getFullYear();
+	if (
+		req.session.current_month &&
+		(current_month !== req.session.current_month ||
+			current_year !== req.session.current_year)
+	) {
+		partyLogDB = require("nedb-promises").create(
+			`./db/${req.session.current_month} - ${req.session.current_year}/party_logs.db`
+		);
+	} else partyLogDB = require("nedb-promises").create(`./db/party_logs.db`);
 	const docs = await partyLogDB.find({}).sort({ date: -1 });
 	if (!docs) {
 		req.session.error = "Error getting Party Logs Details";

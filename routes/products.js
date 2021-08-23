@@ -14,7 +14,7 @@ const productDB = CONFIG.DB.products;
 // }
 
 router.get("/", async function (req, res) {
-	const docs = await productDB.find({}).sort({ status: -1 });
+	const docs = await productDB.find({}).sort({ status: -1, name: 1 });
 	if (!docs) {
 		req.session.error = "Error getting Product Details";
 		return res.redirect("/");
@@ -53,7 +53,7 @@ router.post("/add", async function (req, res) {
 		const result = await productDB.update({ _id }, req.body);
 		if (!result) {
 			req.session.error = "Error getting Old Product Details";
-			res.redirect("../");
+			return res.redirect("../");
 		}
 		req.session.success = "Product Edited Successfully";
 	} else {
@@ -65,7 +65,7 @@ router.post("/add", async function (req, res) {
 		}
 		req.session.success = "Product Added Successfully";
 	}
-	res.redirect("/products");
+	return res.redirect("/products");
 });
 
 router.get("/edit/:id", async function (req, res) {
@@ -93,7 +93,7 @@ router.get("/delete/:id", async function (req, res) {
 		return res.redirect("../");
 	}
 	req.session.success = "Product Status Changed Successfully";
-	res.redirect("/products");
+	return res.redirect("/products");
 });
 
 router.get("/active/:id", async function (req, res) {
@@ -106,7 +106,7 @@ router.get("/active/:id", async function (req, res) {
 		return res.redirect("../");
 	}
 	req.session.success = "Product Status Changed Successfully";
-	res.redirect("/products");
+	return res.redirect("/products");
 });
 
 module.exports = router;

@@ -44,7 +44,7 @@ app.listen(CONFIG.PORT, () => {
 app.use("/products", require("./routes/products"));
 app.use("/party", require("./routes/party"));
 app.use("/invoice", require("./routes/invoice"));
-// app.use("/", require("./whatsapp-init"));
+// app.use("/wa", require("./whatsapp-init"));
 
 (async () => {
 	let date = new Date();
@@ -121,6 +121,13 @@ app.get("/", (req, res) => {
 	res.render("dashboard", response);
 });
 
+if (!fs.existsSync("./db")) {
+	fs.mkdirSync("./db");
+}
+if (!fs.existsSync("./invoices")) {
+	fs.mkdirSync("./invoices");
+}
+
 app.get("/:month/:year?", (req, res) => {
 	const Datastore = require("nedb-promises");
 	const monthsArray = {
@@ -142,8 +149,6 @@ app.get("/:month/:year?", (req, res) => {
 		delete req.session.current_month;
 		delete req.session.current_year;
 		delete req.session.change;
-		CONFIG.DB.invoices = Datastore.create(`./db/invoices.db`);
-		CONFIG.DB.party_logs = Datastore.create(`./db/party_logs.db`);
 	} else if (!input_month.includes("ico")) {
 		input_month = input_month.toProperCase();
 		if (!monthsArray[input_month]) {
@@ -173,15 +178,9 @@ app.get("/:month/:year?", (req, res) => {
 			req.session.error = `Data does not exixts for the ${input_month} ${input_year}`;
 			return res.redirect("/reset");
 		}
-		CONFIG.DB.invoices = Datastore.create(
-			`./db/${input_month} - ${input_year}/invoices.db`
-		);
-		CONFIG.DB.party_logs = Datastore.create(
-			`./db/${input_month} - ${input_year}/party_logs.db`
-		);
 		req.session.current_month = input_month;
 		req.session.current_year = input_year;
 	}
 
-	res.redirect("/");
+	return res.redirect("/");
 });
