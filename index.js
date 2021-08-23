@@ -25,17 +25,18 @@ process.on("unhandledRejection", (err, p) => {
 
 app.set("view engine", "ejs");
 
-app.use(function (req, res, next) {
+/* app.use(function (req, res, next) {
 	if (
 		!(
 			req.path.includes("css") ||
 			req.path.includes("png") ||
-			req.path.includes("ico")
+			req.path.includes("ico") ||
+			req.path.includes("js")
 		)
 	)
 		console.log(req.method + " : " + req.path);
 	next();
-});
+}); */
 
 app.listen(CONFIG.PORT, () => {
 	console.log(`[INFO] : App listening at http://localhost:${CONFIG.PORT}`);
@@ -44,7 +45,7 @@ app.listen(CONFIG.PORT, () => {
 app.use("/products", require("./routes/products"));
 app.use("/party", require("./routes/party"));
 app.use("/invoice", require("./routes/invoice"));
-// app.use("/", require("./whatsapp-init"));
+// app.use("/wa", require("./whatsapp-init"));
 
 (async () => {
 	let date = new Date();
@@ -82,6 +83,14 @@ app.use("/invoice", require("./routes/invoice"));
 				moveFile("./db", "invoices.db");
 				moveFile("./db", "party_logs.db");
 			}
+		});
+		// update the opening balance of party with its due amount
+		const party = await CONFIG.DB.party.find({});
+		party.forEach(async (p) => {
+			await CONFIG.DB.party.update(
+				{ _id: p._id },
+				{ $set: { opening_balance: p.due } }
+			);
 		});
 	}
 })();
@@ -121,6 +130,14 @@ app.get("/", (req, res) => {
 	res.render("dashboard", response);
 });
 
+if (!fs.existsSync("./db")) {
+	fs.mkdirSync("./db");
+}
+
+if (!fs.existsSync("./assets/invoices")) {
+	fs.mkdirSync("./assets/invoices");
+}
+
 app.get("/:month/:year?", (req, res) => {
 	const Datastore = require("nedb-promises");
 	const monthsArray = {
@@ -142,8 +159,6 @@ app.get("/:month/:year?", (req, res) => {
 		delete req.session.current_month;
 		delete req.session.current_year;
 		delete req.session.change;
-		CONFIG.DB.invoices = Datastore.create(`./db/invoices.db`);
-		CONFIG.DB.party_logs = Datastore.create(`./db/party_logs.db`);
 	} else if (!input_month.includes("ico")) {
 		input_month = input_month.toProperCase();
 		if (!monthsArray[input_month]) {
@@ -173,15 +188,9 @@ app.get("/:month/:year?", (req, res) => {
 			req.session.error = `Data does not exixts for the ${input_month} ${input_year}`;
 			return res.redirect("/reset");
 		}
-		CONFIG.DB.invoices = Datastore.create(
-			`./db/${input_month} - ${input_year}/invoices.db`
-		);
-		CONFIG.DB.party_logs = Datastore.create(
-			`./db/${input_month} - ${input_year}/party_logs.db`
-		);
 		req.session.current_month = input_month;
 		req.session.current_year = input_year;
 	}
 
-	res.redirect("/");
+	return res.redirect("/");
 });

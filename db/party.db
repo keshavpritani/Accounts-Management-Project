@@ -1,1 +1,3 @@
-{"_id":"toXq4S3rsER34drh","name":"Administration","phone_number":"21","due":7074,"products":[{"product_id":"VLsxkvN9uYTE4UCA","price":"23"}]}
+{"_id":"PBOD0ZZIw5sdu3Z6","name":"Agra","phone_number":"","products":[{"product_id":"aqA01FrIX7a4A2Ez","price":"100"},{"product_id":"zewcXlrnn6sEUe66","price":"200"}],"due":"6667.00","opening_balance":0}
+{"name":"Chennai","phone_number":"9724426259","products":[{"product_id":"phLMFHqlkYQGfo1Q","price":"1000"},{"product_id":"KzzbIgejemO8ap4W","price":"2000"},{"product_id":"aqA01FrIX7a4A2Ez","price":"500"}],"due":"849.00","opening_balance":0,"_id":"mKU2LVNVHgCemwCB"}
+{"name":"Chennai","phone_number":"9724426259","products":[{"product_id":"phLMFHqlkYQGfo1Q","price":"1000"},{"product_id":"KzzbIgejemO8ap4W","price":"2000"},{"product_id":"aqA01FrIX7a4A2Ez","price":"500"}],"due":"1831.00","opening_balance":0,"_id":"mKU2LVNVHgCemwCB"}

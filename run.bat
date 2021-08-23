@@ -1,0 +1,1 @@
+cls && chrome http://localhost:3000 --new-window && npm start

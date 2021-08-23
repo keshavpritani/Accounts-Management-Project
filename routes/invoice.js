@@ -7,32 +7,27 @@ const axios = require("axios");
 
 const partyDB = CONFIG.DB.party;
 const productDB = CONFIG.DB.products;
-const invoiceDB = CONFIG.DB.invoices;
+let invoiceDB = CONFIG.DB.invoices;
 
-// Database Schema
-
-// {
-// 	"party_id":"ZSHfyVKOhZomCMHH",
-// 	"party_name":"Keshav Pritani",
-// 	"order_date":{
-// 	   "$$date":1629574292172
-// 	},
-// 	"products":[
-// 	   {
-// 		  "product_id":"VLsxkvN9uYTE4UCA",
-// 		  "qty":"1",
-// 		  "price":"100"
-// 	   },
-// 	   {
-// 		  "product_id":"XOPjxEx8GSIqKogl",
-// 		  "qty":"1",
-// 		  "price":"122"
-// 	   }
-// 	],
-// 	"_id":"f0mxUFs0lF3sS1kN"
-// }
+const checkDBFile = (session) => {
+	const current_date = new Date();
+	const current_month = current_date.toLocaleString("en-US", {
+		month: "short",
+	});
+	const current_year = current_date.getFullYear();
+	if (
+		session.current_month &&
+		(current_month !== session.current_month ||
+			current_year !== session.current_year)
+	) {
+		invoiceDB = require("nedb-promises").create(
+			`./db/${session.current_month} - ${session.current_year}/invoices.db`
+		);
+	} else invoiceDB = require("nedb-promises").create(`./db/invoices.db`);
+};
 
 router.get("/", async function (req, res) {
+	checkDBFile(req.session);
 	const docs = await invoiceDB.find({}).sort({ order_date: -1 });
 	// console.log(docs);
 	if (!docs) {
@@ -66,6 +61,7 @@ router.get("/", async function (req, res) {
 		response.result = {
 			status: "success",
 			message: req.session.success,
+			file_path: req.session.file_path,
 		};
 		delete req.session.success;
 	}
@@ -74,13 +70,14 @@ router.get("/", async function (req, res) {
 });
 
 router.get("/add", async function (req, res) {
+	checkDBFile(req.session);
 	const docs = await partyDB.find({});
 	if (!docs) {
 		req.session.error = "Error getting Party Details";
 		return res.redirect("./");
 	}
 
-	const products = await productDB.find({ status: "true" });
+	const products = await productDB.find({ status: "true" }).sort({ name: 1 });
 	if (!products) {
 		req.session.error = "Error getting Product Details";
 		return res.redirect("./");
@@ -97,8 +94,17 @@ router.get("/add", async function (req, res) {
 });
 
 router.post("/add", async function (req, res) {
-	let { _id, party_id, products, qtys, prices } = req.body;
-	// console.log(products);
+	let {
+		_id,
+		party_id,
+		products,
+		qtys,
+		prices,
+		discount,
+		transportation,
+		total,
+	} = req.body;
+
 	let products_obj = [];
 
 	for (let i = 0; i < products.length; i++) {
@@ -108,18 +114,13 @@ router.post("/add", async function (req, res) {
 			price: prices[i],
 		});
 	}
-	products_obj = [
-		...new Map(
-			products_obj.map((item) => [item["product_id"], item])
-		).values(),
-	];
-	// calculate the total price
-	let total_price = products_obj.reduce(
-		(acc, cur) => acc + parseFloat(cur.price) * parseInt(cur.qty),
-		0
+	productMap = new Map(
+		products_obj.map((item) => [item["product_id"], item])
 	);
+	// To the filter out the duplicate products
+	products_obj = [...productMap.values()];
 
-	// console.log(`TOtal price ${total_price}`);
+	let total_price = total;
 
 	let order_date = new Date();
 	const docs = await partyDB.findOne({ _id: party_id });
@@ -135,36 +136,52 @@ router.post("/add", async function (req, res) {
 			return res.redirect("./");
 		}
 		order_date = invoice.order_date;
-		// calculate the old total by product price * qty
-		let oldTotal = 0;
-		for (let i = 0; i < invoice.products.length; i++) {
-			oldTotal +=
-				parseFloat(invoice.products[i].price) *
-				parseInt(invoice.products[i].qty);
-		}
+		total_price -= invoice.total;
+		const old_products = invoice.products;
 
-		total_price -= oldTotal;
+		// find the difference in the quantity with the old quantity
+		for (let i = 0; i < old_products.length; i++) {
+			const old_product = old_products[i];
+			const product = productMap.get(old_product.product_id);
+			if (product) {
+				const qty = parseInt(product.qty) - parseInt(old_product.qty);
+				// update the product quantity in the product db
+				await productDB.update(
+					{ _id: old_product.product_id },
+					{ $inc: { stock: -qty } }
+				);
+			}
+		}
 	}
-	// get party due amount
-	let due_amount = parseFloat(docs.due);
-	// add the total price to the due amount
-	due_amount += total_price;
-	// update the party database with the total amount
-	// console.log(due_amount);
-	let party_update = await partyDB.update(
-		{ _id: party_id },
-		{ $set: { due: due_amount } }
-	);
-	if (!party_update) {
-		req.session.error = "Error updating party due amount";
-		return res.redirect("./");
+
+	// decrease the qty of the products
+	else
+		for (let i = 0; i < products_obj.length; i++)
+			await productDB.update(
+				{ _id: products_obj[i].product_id },
+				{ $inc: { stock: -products_obj[i].qty } }
+			);
+
+	if (total_price != 0) {
+		const due = (parseFloat(docs.due) + parseFloat(total_price)).toFixed(2);
+		let party_update = await partyDB.update(
+			{ _id: party_id },
+			{ $set: { due } }
+		);
+		if (!party_update) {
+			req.session.error = "Error updating party due amount";
+			return res.redirect("./");
+		}
 	}
 
 	let invoice_obj = {
-		party_id: party_id,
+		party_id,
 		party_name: docs.name,
-		order_date: order_date,
+		order_date,
 		products: products_obj,
+		total,
+		discount,
+		transportation,
 	};
 	// console.log(invoice_obj);
 	let result;
@@ -180,7 +197,7 @@ router.post("/add", async function (req, res) {
 
 router.get("/edit/:id", async function (req, res) {
 	const docs = await invoiceDB.findOne({ _id: req.params.id });
-	const products = await productDB.find({ status: "true" });
+	const products = await productDB.find({ status: "true" }).sort({ name: 1 });
 	if (!products) {
 		req.session.error = "Error getting Product Details";
 		return res.redirect("../");
@@ -257,26 +274,28 @@ async function getPriceOfProduct(req, res) {
 	if (party_id) {
 		const doc = await partyDB.findOne({ _id: party_id });
 		// console.log(doc);
-		if (!doc) {
-			req.session.error = "Error getting Party Details";
-			return res.redirect("./");
-		}
+		if (!doc)
+			return res.json({
+				result: false,
+				msg: "Error getting Party Details",
+			});
 		// console.log(doc);
 		const party_products = doc.products;
 		const product = party_products.find((p) => p.product_id == product_id);
 		if (product) {
-			res.json({ price: product.price });
+			res.json({ result: true, price: product.price });
 		} else {
 			delete req.query.party_id;
 			return getPriceOfProduct(req, res);
 		}
 	} else {
 		const doc = await productDB.findOne({ _id: product_id });
-		if (!doc) {
-			req.session.error = "Error getting Product Details";
-			return res.redirect("./");
-		}
-		res.json({ price: doc.price });
+		if (!doc)
+			return res.json({
+				result: false,
+				msg: "Error getting Product Details",
+			});
+		res.json({ result: true, price: doc.price });
 	}
 }
 
@@ -298,17 +317,18 @@ function formatDate(date) {
 }
 
 // confirm the invoice
-router.get("/confirm/:id", async function (req, res) {
+router.post("/confirm/:id", async function (req, res) {
 	// check if we have connected to whatsapp api or not
-	const whatsappStatus = await axios
-		.get(`http://localhost:${CONFIG.PORT}/auth/checkauth`)
+	/* const whatsappStatus = await axios
+		.get(`http://localhost:${CONFIG.PORT}/wa/auth/checkauth`)
 		.catch((err) => {
-			req.session.error = "Error Getting Whatsapp details";
+			req.session.error = "Error Getting Whatsapp Authentication";
 			return res.redirect("../");
 		});
-	// if (whatsappStatus.data.indexOf("CONNECTED") !== 0) {
-	// 	return res.redirect("/auth/getqr");
-	// }
+	if (whatsappStatus.data.indexOf("CONNECTED") !== 0) {
+		return res.redirect("/wa/auth/getqr");
+	} */
+	const { company_name, invoice_no } = req.body;
 	let invoice = await invoiceDB.findOne({ _id: req.params.id });
 	if (!invoice) {
 		req.session.error = "Error getting Invoice Details";
@@ -339,49 +359,56 @@ router.get("/confirm/:id", async function (req, res) {
 
 	// sum of all the total of the products
 	const sub_total = products.reduce((a, b) => Number(a) + Number(b.total), 0);
-	const d = new Date(invoice.order_date);
-	const invoice_no = invoice._id;
+	const order_date = new Date(invoice.order_date);
+	// const invoice_no = invoice._id;
 	const bill_details = {
 		party_details: {
 			party_name: invoice.party_name,
 			phone_number: invoice.phone_number,
 		},
 		items: products,
-		order_date: formatDate(d),
+		order_date: formatDate(order_date),
 		subtotal: sub_total,
 		due: partyObj.due,
 		invoice_nr: invoice_no,
+		company_name,
 	};
 
 	// filename - Party Name - Invoice No. - Invoice Date
 	let filename =
 		invoice.party_name.replace(/ /g, "_") +
 		"_" +
-		formatDate(d).replace(/ /g, "_") +
+		formatDate(order_date).replace(/ /g, "_") +
 		".pdf";
 
-	file_path = "./invoices/" + filename;
+	file_path = "./assets/invoices/" + filename;
+	const doc = createInvoice(bill_details, file_path);
 	// trim the white space from the phone number
 	phone_number = invoice.phone_number.replace(/\s+/g, "");
-	createInvoice(bill_details, file_path);
-	setTimeout(async () => {
-		fs.readFile(file_path, async function (err, data) {
-			if (err) throw err;
-			const pdf = data.toString("base64"); //PDF WORKS
-			const whatsappResult = await axios
-				.post(
-					`http://localhost:${CONFIG.PORT}/chat/sendpdf/91${phone_number}`,
-					{ pdf }
-				)
-				.catch((err) => {
-					req.session.error = "Error Sending PDF to Party";
-					return res.redirect("../");
-				});
-			// console.log(whatsappResult.status);
-		});
-		req.session.success = "Bill Sent Successfully";
-		res.redirect("/invoice");
-	}, 1000);
+	// phone_number = "";
+	if (phone_number.length == 10) {
+		setTimeout(async () => {
+			fs.readFile(file_path, async function (err, data) {
+				if (err) throw err;
+				const pdf = data.toString("base64");
+				await axios
+					.post(
+						`http://localhost:${CONFIG.PORT}/wa/chat/sendpdf/91${phone_number}`,
+						{ pdf }
+					)
+					.catch((err) => {
+						req.session.error = "Error Sending PDF to Party";
+						return res.redirect("../");
+					});
+			});
+			req.session.success = "Bill Sent Successfully";
+			return res.redirect("../");
+		}, 1000);
+	} else {
+		req.session.success = "Bill Generated but didn't sent to the Customer";
+		req.session.file_path = filename;
+		return res.redirect("../");
+	}
 });
 
 module.exports = router;

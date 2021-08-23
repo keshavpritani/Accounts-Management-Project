@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Dashboard - Kisbis Food Industry</title>
+		<%- include('partials/css'); %>
+	</head>
+	<body>
+		<%- include('partials/preloaded'); %>
+
+		<div id="main-wrapper">
+			<%- include('partials/header'); %> <%- include('partials/sidebar');
+			%>
+
+			<!--**********************************
+            Content body start
+        ***********************************-->
+
+			<div class="content-body">
+				<!-- row -->
+				<div class="container-fluid">
+					<div class="row">
+						<div class="col-12">
+							<br /><br /><br /><br /><br /><br /><br />
+							<h1 style="text-align: center">
+								Welcome to Kisbis Food Industry
+							</h1>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!--**********************************
+            Content body end
+        ***********************************-->
+
+			<%- include('partials/footer'); %>
+		</div>
+		<%- include('partials/scripts'); %> <% if(locals.result) { %>
+		<script>
+			swal("<%= result.message %>", "", "<%= result.status %>");
+		</script>
+		<% } %>
+	</body>
+</html>

@@ -77,6 +77,7 @@
 													<th>#</th>
 													<th>Party Name</th>
 													<th>Invoice Date</th>
+													<th>Invoice Total</th>
 													<th>Action</th>
 												</tr>
 											</thead>
@@ -90,8 +91,12 @@
 														invoice[i].party_name %>
 													</td>
 													<td>
-														<%=
-														invoice[i].order_date %>
+														<%= new
+														Date(invoice[i].order_date).toLocaleString()
+														%>
+													</td>
+													<td>
+														<%= invoice[i].total %>
 													</td>
 													<td>
 														<span>
@@ -125,30 +130,161 @@
 															&nbsp;&nbsp;&nbsp;&nbsp;
 															<!-- button for confirm to send update to party -->
 															<%
-															if(invoice[i].phone_number
-															&&
-															invoice[i].phone_number.length
-															>= 10) { %>
-															<a
+															if(invoice[i].phone_number)
+															{ %>
+															<!-- <a
 																href="/invoice/confirm/<%= invoice[i]._id %>"
+															> -->
+															<button
+																type="button"
+																class="
+																	btn
+																	btn-success
+																	btn-sm
+																"
+																data-toggle="modal"
+																data-target="#exampleModal<%= invoice[i]._id %>"
 															>
-																<button
-																	type="button"
+																<i
 																	class="
-																		btn
-																		btn-success
-																		btn-sm
+																		fa
+																		fa-check
 																	"
+																></i>
+																Send Bill
+															</button>
+															<!-- </a> -->
+															<!-- Modal -->
+															<div
+																class="
+																	modal
+																	fade
+																"
+																id="exampleModal<%= invoice[i]._id %>"
+																tabindex="-1"
+																role="dialog"
+																aria-labelledby="exampleModalLabel"
+																aria-hidden="true"
+															>
+																<div
+																	class="
+																		modal-dialog
+																	"
+																	role="document"
 																>
-																	<i
+																	<div
 																		class="
-																			fa
-																			fa-check
+																			modal-content
 																		"
-																	></i>
-																	Send Bill
-																</button>
-															</a>
+																	>
+																		<div
+																			class="
+																				modal-header
+																			"
+																		>
+																			<h5
+																				class="
+																					modal-title
+																				"
+																				id="exampleModalLabel"
+																			>
+																				Send
+																				Bill
+																			</h5>
+																			<button
+																				type="button"
+																				class="
+																					close
+																				"
+																				data-dismiss="modal"
+																				aria-label="Close"
+																			>
+																				<span
+																					aria-hidden="true"
+																					>&times;</span
+																				>
+																			</button>
+																		</div>
+																		<form
+																			action="/invoice/confirm/<%= invoice[i]._id %>"
+																			method="POST"
+																		>
+																			<div
+																				class="
+																					modal-body
+																				"
+																			>
+																				<div
+																					class="
+																						form-group
+																					"
+																				>
+																					<label>
+																						Company
+																						Name
+																					</label>
+
+																					<input
+																						type="text"
+																						class="
+																							form-control
+																						"
+																						placeholder="Enter Name"
+																						name="company_name"
+																						value="Kisbis Food Industries"
+																						required
+																					/>
+																				</div>
+																				<div
+																					class="
+																						form-group
+																					"
+																				>
+																					<label>
+																						Invoice
+																						No.
+																					</label>
+
+																					<input
+																						type="text"
+																						class="
+																							form-control
+																						"
+																						placeholder="Enter Invoice Number"
+																						name="invoice_no"
+																					/>
+																				</div>
+																			</div>
+																			<div
+																				class="
+																					modal-footer
+																				"
+																			>
+																				<button
+																					type="button"
+																					class="
+																						btn
+																						btn-secondary
+																					"
+																					data-dismiss="modal"
+																				>
+																					Close
+																				</button>
+																				<button
+																					type="submit"
+																					class="
+																						btn
+																						btn-primary
+																					"
+																					autofocus
+																				>
+																					Submit
+																				</button>
+																			</div>
+																		</form>
+																	</div>
+																</div>
+															</div>
 															<% } %>
 														</span>
 													</td>
@@ -160,6 +296,7 @@
 													<th>#</th>
 													<th>Party Name</th>
 													<th>Invoice Date</th>
+													<th>Invoice Total</th>
 													<th>Action</th>
 												</tr>
 											</tfoot>
@@ -192,52 +329,37 @@
 
 				// months array of 3 letters months name
 				const months = {
-					Jan: "01",
-					Feb: "02",
-					Mar: "03",
-					Apr: "04",
-					May: "05",
-					Jun: "06",
-					Jul: "07",
-					Aug: "08",
-					Sep: "09",
-					Oct: "10",
-					Nov: "11",
-					Dec: "12",
+					Jan: { m: "01", ld: 31 },
+					Feb: { m: "02", ld: 29 },
+					Mar: { m: "03", ld: 31 },
+					Apr: { m: "04", ld: 30 },
+					May: { m: "05", ld: 31 },
+					Jun: { m: "06", ld: 30 },
+					Jul: { m: "07", ld: 31 },
+					Aug: { m: "08", ld: 31 },
+					Sep: { m: "09", ld: 30 },
+					Oct: { m: "10", ld: 31 },
+					Nov: { m: "11", ld: 30 },
+					Dec: { m: "12", ld: 31 },
 				};
 				// last day of all months
-				const last_day = {
-					1: 31,
-					2: 29,
-					3: 31,
-					4: 30,
-					5: 31,
-					6: 30,
-					7: 31,
-					8: 31,
-					9: 30,
-					10: 31,
-					11: 30,
-					12: 31,
-				};
 				minDate = $("#min");
 				maxDate = $("#max");
 				let today = new Date();
-				today.setDate(today.getDate() + 1);
-				let mm = months[current_month[0]];
+				// today.setDate(today.getDate() + 1);
+				let mm = months[current_month[0]].m;
 				let yyyy = current_month[1];
-				let curr_month = today.getMonth() + 1; //January is 0 so need to add 1 to make it 1!
+				let curr_month = today.getMonth() + 1;
 				let dd;
 				if (curr_month == mm && yyyy == today.getFullYear()) {
 					dd = today.getDate();
 				} else {
-					dd = last_day[parseInt(mm)];
+					dd = months[current_month[0]].ld;
 					// check for leap year and february
-					if (!(mm == "02" && yyyy % 4 == 0)) {
-						dd--;
-					}
+					if (mm == "02" && yyyy % 4 == 0) dd--;
 				}
 				today = yyyy + "-" + mm + "-";
+				// console.log(today);
 				// console.log(dd);
 
 				minDate.val(today + "01");
@@ -261,9 +383,12 @@
 				data,
 				dataIndex
 			) {
-				var min = new Date(minDate.val());
-				var max = new Date(maxDate.val());
-				var date = new Date(data[2]);
+				const dateArr = data[2].split(",")[0].split("/");
+				const min = new Date(minDate.val());
+				const max = new Date(maxDate.val());
+				const date = new Date(
+					`${dateArr[1]}-${dateArr[0]}-${dateArr[2]}`
+				);
 
 				// console.log(min, max, date);
 
@@ -283,6 +408,10 @@
 		<script>
 			swal("<%= result.message %>", "", "<%= result.status %>");
 		</script>
-		<% } %>
+		<% if(result.message.includes("didn't")) { %>
+		<script>
+			window.open("/invoices/<%= result.file_path %>");
+		</script>
+		<% } %> <% } %>
 	</body>
 </html>

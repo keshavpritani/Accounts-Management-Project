@@ -57,7 +57,6 @@
                               autofocus
                               maxlength="10"
                               name="phone_number"
-                              required
                               <% if (locals.party) { %>
                               value="<%= party.phone_number %>"
                               <% } %>
@@ -81,14 +80,12 @@
                           <tbody>
                             <% if (locals.party) { %>
                               <% for (var j = 0; j < locals.party.products.length; j++) { %>
+                                <% for(var i=0; i < products.length;i++) { 
+                                  if(party.products[j].product_id === products[i]._id) { %>
                               <tr id="row<%= j %>"> 
                                 <td>
-                                  <% for(var i=0; i < products.length;i++) { 
-                                    if(party.products[j].product_id === products[i]._id) { %>
                                       <input type="hidden" name="products[]" value="<%= products[i]._id %>">
                                       <input type="text" value="<%= products[i].name %>" class="form-control input-rounded" readonly >
-                                    <% } %>
-                                  <% } %> 
                                 </td>
                                 <td>
                                   <input type="number" class="form-control input-rounded" name="prices[]" step="0.01" value="<%= party.products[j].price%>" />
@@ -99,6 +96,8 @@
                                   </button>
                                 </td>
                               </tr>
+                              <% } %>
+                            <% } %> 
                             <% } } else { %>
                             <tr id="row0"> 
                               <td>
@@ -162,6 +161,10 @@
           tr+=`</tr>`;
           $("#productTable tbody").append(tr);
         }
+        $(document).ready(function() {
+          if($("#productTable tbody tr").length == 0)
+            addProductRow();
+        });
 
         function removeProductRow(row) {
           if($("#productTable tbody tr").length === 1) {

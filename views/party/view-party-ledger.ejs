@@ -4,7 +4,7 @@
 		<meta charset="utf-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
-		<title>Party Payments Logs - Kisbis Food Industry</title>
+		<title>Party Ledger - Kisbis Food Industry</title>
 		<%- include('../partials/css'); %>
 	</head>
 
@@ -26,7 +26,7 @@
 					<div class="row page-titles mx-0">
 						<div class="col-sm-6 p-md-0">
 							<div class="welcome-text">
-								<h4>Party Payments</h4>
+								<h4>Party Ledger - <%= party_name %></h4>
 							</div>
 						</div>
 					</div>
@@ -45,55 +45,59 @@
 											<thead>
 												<tr>
 													<th>#</th>
-													<th>Party Name</th>
-													<th>Amount</th>
 													<th>Date</th>
-													<!-- <th>Action</th> -->
+													<th>Debit</th>
+													<th>Credit</th>
 												</tr>
 											</thead>
+											<tr
+												style="
+													font-weight: bolder;
+													height: 70px;
+												"
+											>
+												<td colspan="2">
+													Opening Balance
+												</td>
+												<td><%= opening_balance %></td>
+											</tr>
 											<tbody>
 												<% for(var i=0; i <
 												logs.length;i++) { %>
 												<tr>
 													<td><%= i + 1 %></td>
 													<td>
-														<%= logs[i].party_name
+														<%= new
+														Date(logs[i].date).toLocaleString()
 														%>
+													</td>
+													<td>
+														<%= logs[i].total %>
 													</td>
 													<td>
 														<%= logs[i].amount%>
 													</td>
-													<td>
-														<%= new
-														Date(logs[i].date).toLocaleString()%>
-													</td>
-													<!-- <td>
-														<span>
-															<a
-																href="/party/logs/delete/<%= logs[i]._id %>"
-																data-toggle="tooltip"
-																data-placement="top"
-																title="Make Inactive"
-																><i
-																	class="
-																		fa
-																		fa-close
-																		color-danger
-																	"
-																></i
-															></a>
-														</span>
-													</td> -->
 												</tr>
 												<% } %>
+												<tr
+													style="
+														font-weight: bolder;
+														height: 70px;
+													"
+												>
+													<td colspan="2">
+														Closing Balance
+													</td>
+													<td><%= debitB %></td>
+													<td><%= creditB %></td>
+												</tr>
 											</tbody>
 											<tfoot>
 												<tr>
 													<th>#</th>
-													<th>Party Name</th>
-													<th>Amount</th>
 													<th>Date</th>
-													<!-- <th>Action</th> -->
+													<th>Debit</th>
+													<th>Credit</th>
 												</tr>
 											</tfoot>
 										</table>
@@ -102,6 +106,7 @@
 							</div>
 						</div>
 					</div>
+					<!-- row -->
 				</div>
 			</div>
 			<!--**********************************

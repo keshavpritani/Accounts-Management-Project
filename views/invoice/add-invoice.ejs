@@ -54,7 +54,7 @@
                                 class="form-control input-rounded"
                                 autofocus
                                 name="name"
-                                value="<%= invoice.order_date %>"
+                                value="<%= new Date(invoice.order_date).toLocaleString() %>"
                                 disabled
                               />
                             </div>
@@ -132,10 +132,10 @@
                                 <input type="number" class="form-control input-rounded" id="qty0" name="qtys[]" onchange="changePrice(0)" min="1" value="1" required />
                               </td>
                               <td>
-                                <input type="number" class="form-control input-rounded" id="price0" name="prices[]" onchange="changePrice(0)" step="0.01" required />
+                                <input type="number" class="form-control input-rounded" id="price0" name="prices[]" value="0" onchange="changePrice(0)" step="0.01" required />
                               </td>
                               <td>
-                                <input type="number" disabled class="form-control input-rounded" id="total0" step="0.01" required />
+                                <input type="number" disabled class="form-control input-rounded" id="total0" step="0.01" value="0.00" required />
                               </td>
                               <td>
                                 <button type="button" id="removeProductRowBtn" class="btn btn-danger btn-sm removeProductRowBtn" onclick="removeProductRow(0)">
@@ -144,6 +144,52 @@
                               </td>
                             </tr>
                             <% } %>
+                            <tr>
+                              <td colspan="2"></td>
+                              <td style="color: black;">Sub Total</td>
+                              <td>
+                                  <input type="number" class="form-control input-rounded" id="sub_total" disabled value="0" />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colspan="2"></td>
+                              <td style="color: black;">Discount</td>
+                                <td>
+                                  <input type="number" class="form-control input-rounded" id="discount" name="discount" onchange="changeTotal()" min="0" max="100" 
+                                  <% if (locals.invoice) { %>
+                                    value="<%= invoice.discount %>"
+                                  <% } else { %>
+                                    value="0" 
+                                  <% } %>
+                                     required 
+                                  />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colspan="2"></td>
+                              <td style="color: black;">Transportation Charges</td>
+                                <td>
+                                  <input type="number" class="form-control input-rounded" id="transportation" name="transportation" onchange="changeTotal()" step="0.01"
+                                  <% if (locals.invoice) { %>
+                                    value="<%= invoice.transportation %>"
+                                  <% } else { %>
+                                    value="0" 
+                                  <% } %>
+                                  required />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colspan="2"></td>
+                              <td style="color: black;">Total</td>
+                              <td>
+                                <input type="number" class="form-control input-rounded" id="total" name="total"
+                                <% if (locals.invoice) { %>
+                                  value="<%= invoice.total %>"
+                                <% } else { %>
+                                  value="0" 
+                                <% } %> readonly>
+                              </td>
+                            </tr>
                           </tbody>
                         </table>
                       </div>
@@ -151,7 +197,7 @@
                       <button type="button" id="addProductRowBtn" class="btn btn-success btn-sm" onclick="addProductRow()">
                         <i class="fa fa-plus"> Add Row</i>
                       </button>
-                      <input  type="submit" class="btn btn-primary">
+                      &nbsp; &nbsp; &nbsp; &nbsp; <input  type="submit" class="btn btn-primary">
                     </form>
                   </div>
                 </div>
@@ -159,11 +205,11 @@
           </div>
         </div>
       </div>
+    </div>
       <!--**********************************
             Content body end
         ***********************************-->
       <%- include('../partials/footer'); %>
-    </div>
     <!--**********************************
         Main wrapper end
     ***********************************-->
@@ -171,30 +217,35 @@
     <%- include('../partials/scripts'); %>
     <script>
       var party_id = $("#party_id").val();
+      const discount = $("#discount");
+      const transportation = $("#transportation");
+      const additionalRows = 5;
+
       function addProductRow() {
-        let tableLength = $("#productTable tbody tr").length;
+        let tableLength = $("#productTable tbody tr").length - additionalRows + 1;
         let count=0;
         if(tableLength > 0) {
-          const tableRow = $("#productTable tbody tr:last").attr('id');
+          const tableRow = $(`#productTable tbody tr:nth-last-child(${additionalRows})`).attr('id');
           count = tableRow.substring(3);
           count = Number(count) + 1;
         }
         let tr = `<tr id="row${count}">`;
         tr+=`<td><select name="products[]" class="form-control input-rounded" id="product${count}" onchange="getPriceOfProduct(this.value, ${count})" required><option value="">Select Product</option><% for(var i=0; i < products.length;i++) { %><option value="<%= products[i]._id %>"><%= products[i].name %></option><% } %>  </select></td>`;
         tr+=`<td><input type="number" class="form-control input-rounded" id="qty${count}" name="qtys[]" onchange="changePrice(${count})" min="1" value="1" /></td>`;
-        tr+=`<td><input type="number" class="form-control input-rounded" id="price${count}" name="prices[]" step="0.01" onchange="changePrice(${count})" required /></td>`;
+        tr+=`<td><input type="number" class="form-control input-rounded" id="price${count}" name="prices[]" step="0.01" onchange="changePrice(${count})" value="0" required /></td>`;
         tr+=`<td><input type="number" disabled class="form-control input-rounded" id="total${count}" step="0.01" /></td>`;
         tr+=`<td><button type="button" id="removeProductRowBtn" class="btn btn-danger btn-sm removeProductRowBtn" onclick="removeProductRow(${count})"> <i class="fa fa-trash-o"></i></button></td>`;
         tr+=`</tr>`;
-        $("#productTable tbody").append(tr);
+        $(`#productTable tbody tr:nth-last-child(${additionalRows})`).after(tr)
       }
 
       function removeProductRow(row) {
-        if($("#productTable tbody tr").length === 1) {
+        if($("#productTable tbody tr").length === additionalRows) {
           alert("There should be atleast one Product for a invoice");
           return;
         }
         $("#row"+row).remove();
+        changeTotal();
       }
 
       function getPriceOfProduct(productId, row) {
@@ -209,10 +260,13 @@
             party_id: party_id
           },
           success: function(data) {
-            // alert(data);
-            // console.log(data);
-            $("#price"+row).val(data.price);
-            changePrice(row);
+            if(!data.result)
+              alert(data.msg);
+            else
+            {
+              $("#price"+row).val(data.price);
+              changePrice(row);
+            }
           }
         });
       }
@@ -223,7 +277,7 @@
         let tableLength = $("#productTable tbody tr").length;
         let count=0;
         if(tableLength > 0) {		
-          const tableRow = $("#productTable tbody tr:last").attr('id');
+          const tableRow = $(`#productTable tbody tr:nth-last-child(${additionalRows})`).attr('id');
           count = tableRow.substring(3);
           count = Number(count) + 1;
         }
@@ -231,7 +285,7 @@
         for(var i=0; i < count; i++) {
           // console.log($("#product"+i).val());
           const productId = $("#product"+i).val();
-          if(productId!==undefined && productId!=="") {
+          if(productId!==undefined && productId!=="" && productId!==null) {
             getPriceOfProduct(productId, i);
           }
           // alert(productId);
@@ -245,7 +299,28 @@
         let price = $("#price"+row).val();
         let totalPrice = (Number(price) * Number(qty)).toFixed(2);
         $("#total"+row).val(totalPrice);
+        changeTotal();
       }
+
+      function changeTotal() {
+        let tableLength = $("#productTable tbody tr").length - additionalRows + 1;
+        let count=0;
+        if(tableLength > 0) {		
+          const tableRow = $(`#productTable tbody tr:nth-last-child(${additionalRows})`).attr('id');
+          count = tableRow.substring(3);
+          count = Number(count) + 1;
+        }
+        let total=0;
+        for(var i=0; i < count; i++) {
+          total += (parseFloat($("#total"+i).val()) || 0);
+        }
+        $("#sub_total").val(total.toFixed(2));
+        const dis = total * discount.val() / 100;
+        total = total + parseFloat(transportation.val()) - dis;
+        // alert(total)
+        $("#total").val(total.toFixed(2));
+      }
+
+      changeTotal();
     </script>
-  </body>
 </html>

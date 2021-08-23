@@ -99,13 +99,15 @@
 																type="button"
 																class="
 																	btn
-																	btn-primary
+																	btn-success
 																"
 																data-toggle="modal"
 																data-target="#exampleModal<%= party[i]._id %>"
 															>
 																Add Payments
 															</button>
+
+															<!-- Button trigger modal -->
 
 															<!-- Modal -->
 															<div
@@ -223,6 +225,20 @@
 																	</div>
 																</div>
 															</div>
+															&nbsp;&nbsp;&nbsp;&nbsp;
+															<a
+																href="/party/ledger/<%= party[i]._id %>"
+															>
+																<button
+																	type="button"
+																	class="
+																		btn
+																		btn-primary
+																	"
+																>
+																	View Ledger
+																</button>
+															</a>
 															<!-- </a> -->
 														</span>
 													</td>
