@@ -1,4 +1,4 @@
-var Datastore = require("nedb-promises");
+const Datastore = require("nedb-promises");
 module.exports = {
 	PORT: process.env.PORT || 3000,
 	DB: {
@@ -6,6 +6,5 @@ module.exports = {
 		party: Datastore.create("./db/party.db"),
 		party_logs: Datastore.create("./db/party_logs.db"),
 		invoices: Datastore.create("./db/invoices.db"),
-		current_date: Datastore.create("./db/current_date.db"),
 	},
 };

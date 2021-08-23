@@ -179,33 +179,66 @@
 		<!--**********************************
           Main wrapper end
       ***********************************-->
-		<script
-			src="https://code.jquery.com/jquery-3.5.1.js"
-			type="text/javascript"
-		></script>
-		<script
-			src="https://cdn.datatables.net/datetime/1.1.0/js/dataTables.dateTime.min.js"
-			type="text/javascript"
-		></script>
 		<%- include('../partials/scripts'); %>
 		<script>
 			var minDate, maxDate;
 
 			$().ready(function () {
 				// Create date inputs
+				const current_month = $("#current_month")
+					.text()
+					.trim()
+					.split(" ");
+
+				// months array of 3 letters months name
+				const months = {
+					Jan: "01",
+					Feb: "02",
+					Mar: "03",
+					Apr: "04",
+					May: "05",
+					Jun: "06",
+					Jul: "07",
+					Aug: "08",
+					Sep: "09",
+					Oct: "10",
+					Nov: "11",
+					Dec: "12",
+				};
+				// last day of all months
+				const last_day = {
+					1: 31,
+					2: 29,
+					3: 31,
+					4: 30,
+					5: 31,
+					6: 30,
+					7: 31,
+					8: 31,
+					9: 30,
+					10: 31,
+					11: 30,
+					12: 31,
+				};
 				minDate = $("#min");
 				maxDate = $("#max");
-				var today = new Date();
-				var dd = today.getDate();
-				var mm = today.getMonth() + 1; //January is 0 so need to add 1 to make it 1!
-				var yyyy = today.getFullYear();
-				if (dd < 10) {
-					dd = "0" + dd;
-				}
-				if (mm < 10) {
-					mm = "0" + mm;
+				let today = new Date();
+				today.setDate(today.getDate() + 1);
+				let mm = months[current_month[0]];
+				let yyyy = current_month[1];
+				let curr_month = today.getMonth() + 1; //January is 0 so need to add 1 to make it 1!
+				let dd;
+				if (curr_month == mm && yyyy == today.getFullYear()) {
+					dd = today.getDate();
+				} else {
+					dd = last_day[parseInt(mm)];
+					// check for leap year and february
+					if (!(mm == "02" && yyyy % 4 == 0)) {
+						dd--;
+					}
 				}
 				today = yyyy + "-" + mm + "-";
+				// console.log(dd);
 
 				minDate.val(today + "01");
 				minDate.attr({ min: today + "01" });
@@ -215,7 +248,7 @@
 				maxDate.attr({ min: today + "01" });
 				maxDate.attr({ max: today + dd });
 				// DataTables initialisation
-				var table = $("#example").DataTable();
+				let table = $("#example").DataTable();
 
 				// Refilter the table
 				$("#min, #max").on("change", function () {

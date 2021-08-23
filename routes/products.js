@@ -19,7 +19,12 @@ router.get("/", async function (req, res) {
 		req.session.error = "Error getting Product Details";
 		return res.redirect("/");
 	}
-	let response = { products: docs };
+	let response = {
+		products: docs,
+		current_month: req.session.current_month,
+		current_year: req.session.current_year,
+		change: req.session.change,
+	};
 	if (req.session.error) {
 		response.result = { status: "error", message: req.session.error };
 		delete req.session.error;
@@ -34,7 +39,12 @@ router.get("/", async function (req, res) {
 });
 
 router.get("/add", async function (req, res) {
-	res.render("products/add-product");
+	const response = {
+		current_month: req.session.current_month,
+		current_year: req.session.current_year,
+		change: req.session.change,
+	};
+	res.render("products/add-product", response);
 });
 router.post("/add", async function (req, res) {
 	const { _id } = req.body;
@@ -64,7 +74,13 @@ router.get("/edit/:id", async function (req, res) {
 		req.session.error = "Error getting Product Details";
 		return res.redirect("../");
 	}
-	res.render("products/add-product", { product: result });
+	const response = {
+		product: result,
+		current_month: req.session.current_month,
+		current_year: req.session.current_year,
+		change: req.session.change,
+	};
+	res.render("products/add-product", response);
 });
 
 router.get("/delete/:id", async function (req, res) {

@@ -34,6 +34,7 @@ const invoiceDB = CONFIG.DB.invoices;
 
 router.get("/", async function (req, res) {
 	const docs = await invoiceDB.find({}).sort({ order_date: -1 });
+	// console.log(docs);
 	if (!docs) {
 		req.session.error = "Error getting the invoices details";
 		return res.redirect("./");
@@ -49,8 +50,12 @@ router.get("/", async function (req, res) {
 	}
 
 	delete docs.products;
-	let response = { invoice: docs };
-	// console.log(response);
+	let response = {
+		invoice: docs,
+		current_month: req.session.current_month,
+		current_year: req.session.current_year,
+		change: req.session.change,
+	};
 	if (req.session.error) {
 		response.result = {
 			status: "error",
@@ -64,6 +69,7 @@ router.get("/", async function (req, res) {
 		};
 		delete req.session.success;
 	}
+	// console.log(response);
 	res.render("invoice/view-invoices", response);
 });
 
@@ -80,7 +86,13 @@ router.get("/add", async function (req, res) {
 		return res.redirect("./");
 	}
 
-	let response = { party: docs, products: products };
+	let response = {
+		party: docs,
+		products: products,
+		current_month: req.session.current_month,
+		current_year: req.session.current_year,
+		change: req.session.change,
+	};
 	res.render("invoice/add-invoice", response);
 });
 
@@ -192,6 +204,9 @@ router.get("/edit/:id", async function (req, res) {
 		invoice: docs,
 		products1: products1,
 		products: products,
+		current_month: req.session.current_month,
+		current_year: req.session.current_year,
+		change: req.session.change,
 	};
 	res.render("invoice/add-invoice", response);
 });

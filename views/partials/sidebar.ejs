@@ -3,8 +3,10 @@
         ***********************************-->
 <div class="quixnav">
 	<div class="quixnav-scroll">
+		<!-- check if the change is true or not -->
 		<ul class="metismenu" id="menu">
 			<li class="nav-label first">Main Menu</li>
+			<% if(!change) {%>
 			<li>
 				<a href="/" aria-expanded="false"
 					><i class="icon icon-globe-2"></i
@@ -24,6 +26,7 @@
 					<li><a href="/products">View Products</a></li>
 				</ul>
 			</li>
+			<% } %>
 			<li>
 				<a
 					class="has-arrow"
@@ -33,8 +36,10 @@
 					><span class="nav-text">Party</span></a
 				>
 				<ul aria-expanded="false">
+					<% if(!change) {%>
 					<li><a href="/party/add">Add Parties</a></li>
 					<li><a href="/party">View Party</a></li>
+					<% } %>
 					<li><a href="/party/logs">View Party Payments Logs</a></li>
 				</ul>
 			</li>
@@ -47,7 +52,9 @@
 					><span class="nav-text">Invoices</span></a
 				>
 				<ul aria-expanded="false">
+					<% if(!change) {%>
 					<li><a href="/invoice/add">Add Invoice</a></li>
+					<% } %>
 					<li><a href="/invoice">View Invoices</a></li>
 				</ul>
 			</li>

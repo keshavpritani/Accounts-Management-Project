@@ -30,7 +30,12 @@ router.get("/", async function (req, res) {
 		req.session.error = "Error getting Party Details";
 		return res.redirect("/");
 	}
-	let response = { party: docs };
+	let response = {
+		party: docs,
+		current_month: req.session.current_month,
+		current_year: req.session.current_year,
+		change: req.session.change,
+	};
 	if (req.session.error) {
 		response.result = { status: "error", message: req.session.error };
 		delete req.session.error;
@@ -50,7 +55,13 @@ router.get("/add", async function (req, res) {
 		req.session.error = "Error getting Party Details";
 		return res.redirect("./");
 	}
-	res.render("party/add-party", { products: docs });
+	const response = {
+		products: docs,
+		current_month: req.session.current_month,
+		current_year: req.session.current_year,
+		change: req.session.change,
+	};
+	res.render("party/add-party", response);
 });
 
 router.post("/add", async function (req, res) {
@@ -106,6 +117,9 @@ router.get("/edit/:id", async function (req, res) {
 	response = {
 		party: doc,
 		products: products,
+		current_month: req.session.current_month,
+		current_year: req.session.current_year,
+		change: req.session.change,
 	};
 	res.render("party/add-party", response);
 });
@@ -166,7 +180,12 @@ router.get("/logs", async function (req, res) {
 		return res.redirect("./");
 	}
 
-	let response = { logs: docs };
+	let response = {
+		logs: docs,
+		current_month: req.session.current_month,
+		current_year: req.session.current_year,
+		change: req.session.change,
+	};
 	if (req.session.error) {
 		response.result = { status: "error", message: req.session.error };
 		delete req.session.error;
