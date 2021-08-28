@@ -26,6 +26,23 @@ const checkDBFile = (session) => {
 	} else invoiceDB = require("nedb-promises").create(`./db/invoices.db`);
 };
 
+const checkDBFile = (session) => {
+	const current_date = new Date();
+	const current_month = current_date.toLocaleString("en-US", {
+		month: "short",
+	});
+	const current_year = current_date.getFullYear();
+	if (
+		session.current_month &&
+		(current_month !== session.current_month ||
+			current_year !== session.current_year)
+	) {
+		invoiceDB = require("nedb-promises").create(
+			`./db/${session.current_month} - ${session.current_year}/invoices.db`
+		);
+	} else invoiceDB = require("nedb-promises").create(`./db/invoices.db`);
+};
+
 router.get("/", async function (req, res) {
 	checkDBFile(req.session);
 	const docs = await invoiceDB.find({}).sort({ order_date: -1 });
